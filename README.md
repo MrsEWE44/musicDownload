@@ -32,7 +32,7 @@
 ### 使用教程：
 
 ```bash
-# 需要用Python3
+# 需要用Python 3.10.11版本
 git clone https://github.com/MrsEWE44/musicDownload.git
 cd musicDownload
 pip install -r requirements.txt
