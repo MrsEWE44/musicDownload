@@ -221,29 +221,45 @@ class MusicDownloader(QMainWindow):
 
     def get_modern_style(self):
         return """
-        QMainWindow { background-color: #f8f9fa; }
+        QMainWindow { background-color: #f8f9fa; font-size: 11pt; }
         QGroupBox {
-            font-size: 11pt; font-weight: bold; color: #2c3e50;
+            font-size: 12pt; font-weight: bold; color: #2c3e50;
             border: 1px solid #dce1e6; border-radius: 8px;
             margin-top: 12px; padding-top: 8px;
         }
         QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 6px; }
-        QCheckBox { padding: 3px 1px; }
+        QCheckBox { font-size: 11pt; padding: 4px 2px; }
         QLineEdit, QComboBox, QSpinBox {
-            border: 1px solid #d1d5db; border-radius: 6px;
-            padding: 6px 10px; background: white; min-height: 26px;
+            font-size: 11pt; border: 1px solid #d1d5db; border-radius: 6px;
+            padding: 6px 10px; background: white; min-height: 28px;
         }
         QPushButton {
-            border: none; border-radius: 6px; padding: 8px 16px;
+            font-size: 11pt; border: none; border-radius: 6px; padding: 8px 16px;
             background-color: #0078d4; color: white; font-weight: bold;
         }
         QPushButton:hover { background-color: #1089e5; }
         QPushButton:pressed { background-color: #0063b8; }
         QTableWidget {
-            border: 1px solid #e5e7eb; border-radius: 8px;
+            font-size: 11pt; border: 1px solid #e5e7eb; border-radius: 8px;
             background: white; gridline-color: #f3f4f6;
         }
-        QHeaderView::section { background: #e9ecef; border: none; padding: 8px; }
+        QHeaderView::section {
+            font-size: 11pt; font-weight: bold; background: #e9ecef;
+            border: none; padding: 8px;
+        }
+        QMenu {
+            font-size: 11pt; border: 1px solid #d1d5db; border-radius: 6px;
+            background: white; padding: 4px;
+        }
+        QMenu::item {
+            padding: 6px 30px 6px 20px; border-radius: 4px;
+        }
+        QMenu::item:selected { background-color: #e8f0fe; }
+        QComboBox QAbstractItemView {
+            font-size: 11pt; selection-background-color: #0078d4;
+        }
+        QDialog { font-size: 11pt; }
+        QLabel { font-size: 11pt; }
         """
 
     def setup_top(self, parent_layout):
@@ -659,6 +675,8 @@ class MusicDownloader(QMainWindow):
         self.download_thread.start()
 
 if __name__ == "__main__":
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
     app = QApplication(sys.argv)
     win = MusicDownloader()
     win.show()
