@@ -56,6 +56,43 @@ def sanitize_filename(filename):
     return re.sub(r'[\\/*?:"<>|]', "_", str(filename))
 
 
+class NumericTableItem(QTableWidgetItem):
+    """支持按数值排序的表格项（用于大小、时长等列）"""
+
+    def __lt__(self, other):
+        if isinstance(other, QTableWidgetItem):
+            my_val = self.data(Qt.ItemDataRole.UserRole)
+            other_val = other.data(Qt.ItemDataRole.UserRole)
+            if my_val is not None and other_val is not None:
+                try:
+                    return float(my_val) < float(other_val)
+                except (ValueError, TypeError):
+                    pass
+        return super().__lt__(other)
+
+
+def extract_numeric_value(text):
+    """从显示文本中提取数值用于排序"""
+    text = str(text).strip()
+    if not text:
+        return 0
+    try:
+        return float(text)
+    except ValueError:
+        pass
+    if ":" in text:
+        parts = text.split(":")
+        try:
+            if len(parts) == 2:
+                return int(parts[0]) * 60 + float(parts[1])
+        except ValueError:
+            pass
+    import re as _re
+
+    m = _re.match(r"([\d.]+)", text)
+    return float(m.group(1)) if m else 0
+
+
 # ================= 自定义现代 UI 组件 (保留原样) =================
 class ModernComboBox(QComboBox):
     def paintEvent(self, event):
@@ -625,6 +662,11 @@ class MusicDownloader(QMainWindow):
         self.results_table.setColumnWidth(7, 70)
         self.results_table.verticalHeader().setDefaultSectionSize(54)
 
+        self.results_table.setSortingEnabled(True)
+        header = self.results_table.horizontalHeader()
+        header.setSortIndicatorShown(True)
+        header.setSectionsClickable(True)
+
         layout.addWidget(self.results_table)
         parent_layout.addLayout(layout)
 
@@ -779,6 +821,7 @@ class MusicDownloader(QMainWindow):
         return ""
 
     def load_table_with_results(self, search_results):
+        self.results_table.setSortingEnabled(False)
         self.results_table.setRowCount(0)
         self.search_results = search_results
         self.music_records = {}
@@ -809,22 +852,25 @@ class MusicDownloader(QMainWindow):
                     per_source_search_result.get("source", ""), ""
                 )
 
-                items = [
-                    "",
-                    "",
-                    str(song_name),
-                    str(singers),
-                    str(album),
-                    self.get_file_format(per_source_search_result),
-                    str(per_source_search_result.get("file_size", "")),
-                    str(per_source_search_result.get("duration", "")),
-                    str(source_cn),
+                columns_data = [
+                    (2, str(song_name)),
+                    (3, str(singers)),
+                    (4, str(album)),
+                    (5, self.get_file_format(per_source_search_result)),
+                    (6, str(per_source_search_result.get("file_size", ""))),
+                    (7, str(per_source_search_result.get("duration", ""))),
+                    (8, str(source_cn)),
                 ]
 
-                for column, text in enumerate(items):
-                    if column in [0, 1]:
-                        continue
-                    table_item = QTableWidgetItem(text)
+                for column, text in columns_data:
+                    if column in (6, 7):
+                        table_item = NumericTableItem(text)
+                        table_item.setData(
+                            Qt.ItemDataRole.UserRole,
+                            extract_numeric_value(text),
+                        )
+                    else:
+                        table_item = QTableWidgetItem(text)
                     align = (
                         Qt.AlignmentFlag.AlignLeft
                         if column in [2, 3, 4]
@@ -848,6 +894,7 @@ class MusicDownloader(QMainWindow):
                 row += 1
 
         self.btn_download.setEnabled(row > 0)
+        self.results_table.setSortingEnabled(True)
 
         if self.auto_download_after_search and all_songs:
             self._start_download_task(all_songs, f"正在处理 {len(all_songs)} 首歌曲")
